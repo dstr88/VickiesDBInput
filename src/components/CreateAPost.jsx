@@ -1,82 +1,30 @@
-//   /components/CreateAPost.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Client, Databases, ID, Query } from 'appwrite';
+import { Client, Databases, ID, Query, Account } from 'appwrite';
 import { marked } from 'marked';
-import { AppVariables } from '../utils/AppVariables'; // Import AppVariables class
+import { AppVariables } from '../utils/AppVariables';
 import { updateDocumentPermissions } from '../utils/addPermission';
 
-// Initialize Appwrite Client using variables
+// Initialize Appwrite Client
 const client = new Client()
-  .setEndpoint(AppVariables.API_ENDPOINT) // Your API Endpoint
-  .setProject(AppVariables.PROJECT_ID); // Your project ID
+  .setEndpoint(AppVariables.API_ENDPOINT)
+  .setProject(AppVariables.PROJECT_ID);
 const databases = new Databases(client);
+const account = new Account(client);
 
-// Styled components
-const FormContainer = styled.form`
-  background-color: darkslategray;
-  color: white;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 15px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 5px;
-  color: white;
-  font-weight: bold;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #4a7a7a;
-  color: white;
-  background-color: darkslategray;
-  font-size: 14px;
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #4a7a7a;
-  color: white;
-  background-color: darkslategray;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 100px;
-`;
-
-const SubmitButton = styled.button`
-  background-color: #4a7a7a;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  cursor: pointer;
-  &:hover {
-    background-color: #5a8a8a;
+async function getUserID() {
+  try {
+    const user = await account.get();
+    return user.$id;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return null;
   }
-`;
-
-const MessageContainer = styled.div`
-  margin-top: 15px;
-  padding: 10px;
-  border-radius: 4px;
-  font-weight: bold;
-  color: white;
-  background-color: ${(props) => (props.$isError ? '#f44336' : '#4caf50')};
-`;
+}
 
 const CreateAPost = () => {
-  const { postId } = useParams();  // Extract postId from URL params
+  const { postId } = useParams();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -93,8 +41,7 @@ const CreateAPost = () => {
           const response = await databases.getDocument(
             AppVariables.DATABASE,
             AppVariables.COLLECTION_ID,
-            postId,
-            { cache: 'no-cache' }
+            postId
           );
           setTitle(response.title || '');
           setSlug(response.slug || '');
@@ -107,17 +54,13 @@ const CreateAPost = () => {
           setMessage({ text: 'Failed to fetch post data.', isError: true });
         }
       };
-
       fetchPost();
     }
   }, [postId]);
 
   useEffect(() => {
     if (title) {
-      const generatedSlug = title
-        .toLowerCase()
-        .trim()
-        .replace(/[\s\W-]+/g, '-');
+      const generatedSlug = title.toLowerCase().trim().replace(/\s+/g, '-');
       checkSlugUniqueness(generatedSlug);
     }
   }, [title]);
@@ -129,12 +72,7 @@ const CreateAPost = () => {
         AppVariables.COLLECTION_ID,
         [Query.equal('slug', generatedSlug)]
       );
-
-      if (response.total > 0) {
-        setSlug(`${generatedSlug}-${response.total}`);
-      } else {
-        setSlug(generatedSlug);
-      }
+      setSlug(response.total > 0 ? `${generatedSlug}-${response.total}` : generatedSlug);
     } catch (error) {
       console.error('Error checking slug uniqueness:', error);
       setSlug(generatedSlug);
@@ -143,37 +81,35 @@ const CreateAPost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    const userId = await getUserID();
+    if (!userId) {
+      setMessage({ text: 'User authentication required.', isError: true });
+      return;
+    }
     try {
       const htmlContent = marked(content);
       const postData = { title, slug, content: htmlContent, excerpt, topic, isPrivate };
-  
       let documentId;
-  
       if (postId) {
-        console.log('Updating post:', postId, postData);
         const result = await databases.updateDocument(
           AppVariables.DATABASE,
           AppVariables.COLLECTION_ID,
           postId,
           postData,
-          ["read('any')"]
+          [`user:${userId}`]
         );
         documentId = result.$id;
       } else {
-        console.log('Creating new post:', postData);
         const result = await databases.createDocument(
           AppVariables.DATABASE,
           AppVariables.COLLECTION_ID,
           ID.unique(),
-          postData
+          postData,
+          [`user:${userId}`]
         );
         documentId = result.$id;
       }
-  
-      // Call updateDocumentPermissions with the document ID and 'Donnie' as the user ID
-      await updateDocumentPermissions(documentId, 'Donnie');
-  
+      await updateDocumentPermissions(documentId, userId);
       setMessage({ text: 'Post saved successfully!', isError: false });
       navigate(`/view-all-posts?timestamp=${Date.now()}`);
     } catch (error) {
@@ -181,7 +117,7 @@ const CreateAPost = () => {
       setMessage({ text: `Failed to save post: ${error.message}`, isError: true });
     }
   };
-  
+
   return (
     <FormContainer onSubmit={handleSubmit}>
       {message.text && (
@@ -257,5 +193,71 @@ const CreateAPost = () => {
     </FormContainer>
   );
 };
+
+const FormContainer = styled.form`
+  display: flex;
+  background-color: darkslategray;
+  color: white;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+  margin: auto;
+`;
+
+const MessageContainer = styled.div`
+  padding: 0.5rem;
+  /* background-color: ${(props) => (props.$isError ? 'red' : 'green')};  */
+  background-color: darkslategray;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  background-color: darkslategray;
+  color: white;
+`;
+
+const Label = styled.label`
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  background-color: darkslategray;
+  color: white;
+`;
+
+const Input = styled.input`
+  padding: 0.5rem;
+  width: 80vw;
+  background-color: darkslategray;
+  color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
+const TextArea = styled.textarea`
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  background-color: darkslategray;
+  color: white;
+  border-radius: 5px;
+  min-height: 20rem;
+`;
+
+const SubmitButton = styled.button`
+  padding: 0.75rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
 
 export default CreateAPost;
