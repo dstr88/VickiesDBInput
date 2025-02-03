@@ -1,3 +1,4 @@
+// ./components/viewAllPosts.jsx
 import React, { useState, useEffect } from 'react';
 import { Client, Databases } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
@@ -11,27 +12,56 @@ const client = new Client()
 const databases = new Databases(client);
 
 // Styles
-const RowContainer = styled.tr`
-  border: 2px solid white; /* Border around the entire row */
+const LoadingMessage = styled.p`
+  color: white;
+  font-size: 18px;
+  text-align: center;
 `;
 
-const TitleCell = styled.td`
-  text-align: center; /* Centers the title */
-  vertical-align: middle;
-  padding: 1rem;
-  width: 40%; /* Takes a portion of the row */
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 18px;
+  text-align: center;
 `;
 
-const ActionsCell = styled.td`
-  padding: 1rem;
-  width: 30%;
-  text-align: right; /* Push buttons to the right */
+const PageContainer = styled.div`
+  background-color: #2f4f4f;
+  color: white;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
 `;
 
-const PrivateCell = styled.td`
+const Table = styled.table`
+  width: 100%;
+  max-width: 1200px;
+  background-color: darkslategreen;
+  border-collapse: collapse; /* Ensures borders collapse for rows and columns */
+  margin: 20px auto;
+  border: 5px solid darkslategray; /* Outer table border */
+`;
+
+const Th = styled.th`
+  background-color: darkslategreen;
+  border: 5px solid darkslategray; /* Column borders */
+  padding: 8px;
+  text-align: left;
+  color: white;
+`;
+
+const Td = styled.td`
+  border: 5px solid darkslategray; /* Row borders */
   padding: 1rem;
-  width: 30%;
-  text-align: right; /* Push private toggle to the right */
+  background-color: darkslategreen;
+  line-height: 1.5rem;
+`;
+
+const PostTitle = styled.span`
+  display: block;
+  line-height: 1.5rem;
+  padding: 1rem 0;
+  border: 5px solid darkslategray; /* Border around the title */
 `;
 
 const ViewAllPosts = () => {
@@ -62,76 +92,76 @@ const ViewAllPosts = () => {
     fetchPosts();
   }, []);
 
-  if (isLoading) return <p style={{ color: 'white', textAlign: 'center' }}>Loading posts...</p>;
-  if (error) return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
+  if (isLoading) return <LoadingMessage>Loading posts...</LoadingMessage>;
+  if (error) return <ErrorMessage>{error}</ErrorMessage>;
 
   return (
-    <div style={{ backgroundColor: '#2f4f4f', padding: '20px', color: 'white' }}>
+    <PageContainer>
       <h2>Blog Posts</h2>
       {posts.length === 0 ? (
         <p>No posts available. Check your data source.</p>
       ) : (
-        <table style={{ width: '100%', maxWidth: '1200px', margin: '20px auto', borderCollapse: 'collapse', backgroundColor: 'darkslategreen' }}>
+        <Table>
           <thead>
             <tr>
-              <th style={{ padding: '8px', border: '2px solid white', color: 'white' }}>Title</th>
-              <th style={{ padding: '8px', border: '2px solid white', color: 'white' }}>Action</th>
-              <th style={{ padding: '8px', border: '2px solid white', color: 'white' }}>Private</th>
+              <Th>Title</Th>
+              <Th>Action</Th>
+              <Th>Private</Th>
             </tr>
           </thead>
           <tbody>
             {posts
               .slice()
-              .sort((a, b) => new Date(b.$createdAt) - new Date(a.$createdAt))
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((post) => (
-                <RowContainer key={post.$id}>
-                  {/* Title Column (Centered, No Border) */}
-                  <TitleCell>{post.title}</TitleCell>
-
-                  {/* Action Buttons (Right-Aligned) */}
-                  <ActionsCell>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                      <button
-                        onClick={() => navigate(`/CreateAPost/${post.$id}`)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#4CAF50',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this post?')) {
-                            setPosts(posts.filter((p) => p.$id !== post.$id));
-                          }
-                        }}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#f44336',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </ActionsCell>
-
-                  {/* Private Toggle (Right-Aligned) */}
-                  <PrivateCell>
+                <tr
+                  key={post.$id}
+                  style={{
+                    border: '5px solid darkslategray', // Row borders
+                  }}
+                >
+                  <Td>
+                    <PostTitle>{post.title}</PostTitle>
+                  </Td>
+                  <Td style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      onClick={() => navigate(`/CreateAPost/${post.$id}`)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this post?')) {
+                          setPosts(posts.filter((p) => p.$id !== post.$id));
+                        }
+                      }}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#f44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </Td>
+                  <Td>
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'flex-end',
                         gap: '0.2rem',
+                        border: '5px solid darkslategray',
                         padding: '0.5rem',
                         borderRadius: '4px',
                         backgroundColor: '#2e4c4c',
@@ -165,13 +195,13 @@ const ViewAllPosts = () => {
                         }}
                       />
                     </div>
-                  </PrivateCell>
-                </RowContainer>
+                  </Td>
+                </tr>
               ))}
           </tbody>
-        </table>
+        </Table>
       )}
-    </div>
+    </PageContainer>
   );
 };
 
