@@ -1,0 +1,50 @@
+---
+const cookies = Astro.cookies;
+const userId = cookies.get('auth')?.value;
+
+if (!userId) {
+  return Astro.redirect('/login');
+}
+---
+
+<html lang="en">
+  <head>
+    <title>Profile</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>sooo, what do you want??? my left side or my right side?</h1>
+      <br />
+      <p>Why are you profiling me anyway??</p>
+    </div>
+
+    <style>
+      body {
+        background-color: darkslategray;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        text-align: center;
+        max-width: 600px;
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1.2rem;
+      }
+    </style>
+  </body>
+</html>

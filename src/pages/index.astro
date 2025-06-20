@@ -1,0 +1,6 @@
+---
+const cookies = Astro.cookies;
+const userId = cookies.get('auth')?.value;
+
+return Astro.redirect(userId ? '/home' : '/login');
+---

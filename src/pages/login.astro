@@ -1,0 +1,112 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const cookies = Astro.cookies;
+const userId = cookies.get('auth')?.value;
+const error = Astro.url.searchParams.get('error');
+
+if (userId) {
+  return Astro.redirect('/home');
+}
+export const prerender = false; // prevent header access error
+---
+
+
+  <div class="container">
+    <div class="login-register-container">
+      {error && <p class="error-msg">{error}</p>}
+      
+      <form method="POST" action="/api/login" enctype="application/x-www-form-urlencoded">
+        <div class="form-field-wrapper">
+          <label for="username">Username:</label>
+          <input 
+            id="username"
+            required
+            type="text" 
+            name="username"
+            placeholder="Enter username..."
+            autocomplete="username"
+          />
+        </div>
+        
+        <div class="form-field-wrapper">
+          <label for="password">Password:</label>
+          <input 
+            id="password"
+            required
+            type="password" 
+            name="password"
+            placeholder="Enter password..."
+            autocomplete="current-password"
+          />
+        </div>
+
+        <div class="form-field-wrapper">
+          <input 
+            type="submit" 
+            value="Login"
+            class="btn"
+          />
+        </div>
+      </form>
+
+      <p>Don't have an account? <a href="/register">Register</a></p>
+    </div>
+  </div>
+
+  <style>
+    .container {
+      background-color: darkslategray;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-register-container {
+      background-color: #1a3636;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .form-field-wrapper {
+      margin-bottom: 1rem;
+    }
+
+    .form-field-wrapper input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .btn {
+      background-color: white;
+      color: darkslategray;
+      font-weight: bold;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .error-msg {
+      color: red;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    a {
+      color: lightblue;
+      text-decoration: underline;
+    }
+  </style>
+

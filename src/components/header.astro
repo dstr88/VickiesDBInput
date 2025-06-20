@@ -1,0 +1,91 @@
+---
+// ✅ Valid Astro frontmatter — required even if empty
+---
+<header class="header-container">
+  <div class="banner">
+    <img src="/assets/logo.png" alt="Site logo" width="120" />
+
+    <h1 class="greeting">Hello Vickie</h1>
+    <p id="clock" class="time">--:--:--</p>
+  </div>
+
+  <div class="button-container">
+    <button id="toggle-posts" class="nav-button">All Posts</button>
+    <button id="toggle-create" class="nav-button">Create Post</button>
+    <button id="logout" class="button">Logout</button>
+  </div>
+
+  <script type="module">
+    window.addEventListener('DOMContentLoaded', () => {
+      const clock = document.getElementById('clock');
+      const updateClock = () => {
+        clock.textContent = new Date().toLocaleTimeString();
+      };
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      document.getElementById('toggle-posts')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('togglePosts'));
+      });
+
+      document.getElementById('toggle-create')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('toggleCreate'));
+      });
+
+      document.getElementById('logout')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('logout'));
+      });
+    });
+  </script>
+</header>
+
+<style>
+  .header-container {
+    background-color: darkslategray;
+    color: white;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    width: 100%;
+  }
+
+  .banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 2px solid white;
+  }
+
+  .greeting {
+    font-size: 3rem;
+    margin: 0;
+  }
+
+  .time {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .button-container {
+    display: flex;
+    gap: 20px;
+    padding-top: 10px;
+  }
+
+  .nav-button,
+  .button {
+    background-color: darkslategray;
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    font-size: large;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .nav-button:hover,
+  .button:hover {
+    background-color: white;
+    color: darkslategray;
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+import Layout from '../layouts/Layout.astro';
+const error = Astro.url.searchParams.get('error');
+const success = Astro.url.searchParams.get('success');
+export const prerender = false;
+---
+
+
+  <div class="container">
+    <div class="login-register-container">
+      {error && <p class="error-msg">{error}</p>}
+      {success && <p class="success-msg">{success}</p>}
+
+      <form method="POST" action="/api/register" enctype="multipart/form-data">
+
+        <div class="form-field-wrapper">
+          <label for="username">Username:</label>
+          <input required name="username" id="username" type="text" placeholder="Choose a username" />
+        </div>
+        <div class="form-field-wrapper">
+          <label for="password">Password:</label>
+          <input required name="password" id="password" type="password" placeholder="Create a password" />
+        </div>
+
+        <input class="btn" type="submit" value="Create Account" />
+      </form>
+
+      <p><a href="/login">Already have an account? Log in</a></p>
+    </div>
+  </div>
+
+  <style>
+    .container {
+      background-color: darkslategray;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-register-container {
+      background-color: #1a3636;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .form-field-wrapper {
+      margin-bottom: 1rem;
+    }
+
+    .form-field-wrapper input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .btn {
+      background-color: white;
+      color: darkslategray;
+      font-weight: bold;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .error-msg {
+      color: red;
+    }
+
+    .success-msg {
+      color: lightgreen;
+    }
+  </style>
+

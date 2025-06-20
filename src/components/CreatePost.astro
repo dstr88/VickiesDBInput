@@ -1,0 +1,113 @@
+---
+// create-a-post.astro
+import { marked } from 'marked';
+import { useState } from 'astro/jsx-runtime'; // Only needed if you decide to hydrate interactivity later (not used here).
+// For now, form submission will be handled via regular HTML POST.
+
+const post = Astro.request.url.searchParams.get('postId'); // For edit mode support
+const isEdit = Boolean(post);
+const preview = Astro.request.url.searchParams.get('preview') === 'true';
+---
+<html lang="en">
+  <head>
+    <title>{isEdit ? 'Update Post' : 'Create Post'}</title>
+  </head>
+  <body>
+    <form method="POST" action="/api/submit-post" class="form-container">
+      <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" maxlength="255" required />
+      </div>
+
+      <div class="form-group">
+        <label for="slug">Slug:</label>
+        <input type="text" id="slug" name="slug" maxlength="255" required />
+      </div>
+
+      <div class="form-group">
+        <label for="content">Content (Markdown supported):</label>
+        <textarea id="content" name="content" required></textarea>
+        <!-- You can add a JS toggle for preview here later -->
+      </div>
+
+      <div class="form-group">
+        <label for="excerpt">Excerpt:</label>
+        <input type="text" id="excerpt" name="excerpt" maxlength="255" required />
+      </div>
+
+      <div class="form-group">
+        <label for="topic">Topic:</label>
+        <input type="text" id="topic" name="topic" maxlength="255" required />
+      </div>
+
+      <div class="checkbox-container">
+        <input type="checkbox" id="isPrivate" name="isPrivate" />
+        <label for="isPrivate">Is Private</label>
+      </div>
+
+      <button type="submit" class="submit-button">
+        {isEdit ? 'Update Post' : 'Create Post'}
+      </button>
+    </form>
+  </body>
+</html>
+
+<style>
+  .form-container {
+    background-color: darkslategray;
+    color: white;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: auto;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 8px;
+    background-color: darkslategray;
+    border: 1px solid #4a7a7a;
+    color: white;
+    font-size: 14px;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .checkbox-container label {
+    margin-left: 5px;
+  }
+
+  .submit-button {
+    background-color: #4a7a7a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .submit-button:hover {
+    background-color: #5a8a8a;
+  }
+</style>

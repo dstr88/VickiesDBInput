@@ -1,0 +1,21 @@
+---
+const cookies = Astro.cookies;
+const userId = cookies.get('auth')?.value;
+
+if (!userId) {
+  return Astro.redirect('/login'); // ✅ Early redirect before any HTML is rendered
+}
+
+import Layout from '../layouts/Layout.astro';
+import ViewAllPosts from '../components/ViewAllPosts.astro';
+import CreateAPost from '../components/CreatePost.astro';
+---
+
+<Layout>
+  <div id="posts-section">
+    <ViewAllPosts />
+  </div>
+  <div id="create-section" style="display: none;">
+    <CreateAPost />
+  </div>
+</Layout>

@@ -1,0 +1,52 @@
+---
+// No authentication or cookies check here!
+import Header from '../components/header.astro';
+---
+
+<div class="dashboard-container">
+  <Header />
+
+  <main class="content-container">
+    <slot />
+  </main>
+</div>
+
+<script type="module">
+  window.addEventListener('DOMContentLoaded', () => {
+    let activeComponent = 'posts';
+
+    const showSection = (type) => {
+      const posts = document.getElementById('posts-section');
+      const create = document.getElementById('create-section');
+      if (posts && create) {
+        posts.style.display = type === 'posts' ? 'block' : 'none';
+        create.style.display = type === 'create' ? 'block' : 'none';
+      }
+      activeComponent = type;
+    };
+
+    window.addEventListener('togglePosts', () => showSection('posts'));
+    window.addEventListener('toggleCreate', () => showSection('create'));
+    window.addEventListener('logout', () => {
+      window.location.href = '/api/logout';
+    });
+  });
+</script>
+
+<style>
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: darkslategray;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+
+  .content-container {
+    flex: 1;
+    padding: 20px;
+    background-color: #1a3636;
+    overflow-y: auto;
+  }
+</style>
