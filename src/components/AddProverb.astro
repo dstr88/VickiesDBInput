@@ -1,0 +1,83 @@
+---
+import { ProverbData } from '../lib/ProverbData';
+import type { Proverb } from '../types/Proverbs';
+
+const proverbData = new ProverbData();
+const proverbs: Proverb[] = await proverbData.getAllProverbs();
+---
+
+<form id="proverb-form" class="proverb-form">
+
+
+
+  <h2>Add a Proverb</h2>
+
+  <label for="text">Proverb (max 25 words):</label>
+  <textarea
+    id="text"
+    name="text"
+    rows="10"
+    required
+    oninput="limitWords(this); generateSlug();"
+  ></textarea>
+
+  <label for="source">Source (optional):</label>
+  <input type="text" id="source" name="source" />
+
+  <label for="slug">Slug:</label>
+  <input type="text" id="slug" name="slug" readonly style="color: grey;" />
+
+  <label>
+    <input type="checkbox" name="isPrivate" />
+    Make proverb private
+  </label>
+
+  <button type="submit">➕ Submit Proverb</button>
+</form>
+
+<section class="proverb-list">
+  <h3>Saved Proverbs</h3>
+  {proverbs.length === 0 ? (
+    <p>No proverbs found yet.</p>
+  ) : (
+    <ul>
+      {proverbs.map((p) => (
+        <li>
+          <a href={`/proverb/edit/${p.id}`} class="title-link">{p.text}</a>
+          <span class="date">🕒 {new Date(p.created_at).toLocaleDateString()}</span>
+          <button onclick={`deleteProverb('${p.id}')`} class="delete">🗑️</button>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
+
+<script is:inline>
+  document.getElementById('proverb-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const text = form.text.value.trim();
+    const source = form.source.value.trim();
+    const slug = form.slug.value.trim();
+    const isPrivate = form.isPrivate.checked;
+
+    const payload = { text, source, slug, isPrivate };
+
+    const response = await fetch('/api/proverbs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.redirected) {
+      window.location.href = response.url;
+    } else {
+      const error = await response.text();
+      alert("❌ Error: " + error);
+    }
+  });
+</script>
+

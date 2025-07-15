@@ -1,0 +1,101 @@
+---
+// src/pages/previewblog/[postSlug].astro
+import type { APIContext } from "astro";
+import { ArticleData } from "../../lib/ArticleData";
+import type { BlogPost } from "../../types/BlogPost";
+import { sanitizeHtml } from "../../lib/htmlutils";
+import { markdownToHtml } from "../../lib/MarkdownToHtml";
+import Layout from "../../layouts/Layout.astro";
+
+const { postSlug } = Astro.params;
+
+if (!postSlug || typeof postSlug !== "string") {
+  throw new Error("Missing or invalid post slug.");
+}
+
+let post: BlogPost | null = null;
+
+try {
+  const articleData = new ArticleData();
+  post = await articleData.getPostBySlugAllowingPrivate(postSlug); // 👈 you’ll add this method
+} catch (err) {
+  console.error(`❌ Failed to load post "${postSlug}"`, err);
+}
+
+if (!post) {
+  throw new Error(`Blog post not found for slug: ${postSlug}`);
+}
+
+const renderedHtml = markdownToHtml(post.content);
+const cleanHtml = sanitizeHtml(renderedHtml);
+export const prerender = false;
+---
+<Layout>
+  <article class="blog-preview">
+    <h1>{post.title}</h1>
+    <time datetime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString()}</time>
+    <div class="post-content" set:html={cleanHtml} />
+  </article>
+</Layout>
+
+
+<style>
+.blog-preview {
+  max-width: 700px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: #2e2a38;
+  border-radius: 1rem;
+  color: white;
+  box-shadow: 0 0 30px rgba(0,0,0,0.3);
+  font-family: 'Georgia', serif;
+  line-height: 1.6;
+}
+
+.blog-preview h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.blog-preview time {
+  display: block;
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 2rem;
+}
+
+.post-content {
+  margin-top: 2rem;
+}
+
+.post-content h2,
+.post-content h3 {
+  color: #f3f3f3;
+  margin-top: 2rem;
+}
+
+.post-content p {
+  margin-bottom: 1.2rem;
+}
+
+.post-content a {
+  color: #9ecbff;
+  text-decoration: underline;
+}
+
+.post-content blockquote {
+  border-left: 4px solid #9ecbff;
+  padding-left: 1rem;
+  color: #ddd;
+  margin: 1.5rem 0;
+  font-style: italic;
+}
+
+.post-content code {
+  background-color: #1e1a28;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #ffb86c;
+}
+</style>

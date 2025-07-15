@@ -1,0 +1,118 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Clock from "../components/clock.astro";
+import NavForDashboard from "../components/navForDashboard.astro";
+import PostManager from "../components/PostManager.astro";
+import AddProverbs from '../components/AddProverb.astro';
+import { loremIpsum } from "lorem-ipsum";
+
+const lorem = loremIpsum({
+  count: 1000,
+  units: "words",
+  format: "plain"
+});
+
+/*
+const auth = Astro.cookies.get("auth")?.value;
+if (auth !== "true") {
+  return Astro.redirect('/'); 
+} DONT FORGET TO ADD PROVERB SLUG TO DB -->CREATE TABLE proverbs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(255) UNIQUE,
+  text TEXT NOT NULL,
+  source VARCHAR(255),
+  isPrivate BOOLEAN DEFAULT false,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+<--*/
+---
+
+<Layout>
+  <clock />
+  <NavForDashboard />
+  <PostManager />
+</Layout>
+
+  
+
+  <script type="module">
+  // ✅ Log out
+  document.getElementById("logout")?.addEventListener("click", () => {
+    localStorage.removeItem("auth");
+    document.cookie = "auth=false; path=/; Max-Age=0";
+    window.location.href = "/login";
+  });
+
+  // ✅ Toggle post form
+  const toggleButton = document.getElementById("toggle-post-form");
+  const wrapper = document.getElementById("post-form-wrapper");
+
+  toggleButton?.addEventListener("click", () => {
+    const visible = wrapper.style.display === "block";
+    wrapper.style.display = visible ? "none" : "block";
+    toggleButton.textContent = visible ? "✍️ Create New Post" : "🛑 Cancel";
+  });
+
+  // ✅ Toggle proverb form
+  const toggleProverbButton = document.getElementById("toggle-proverb-form");
+  const proverbWrapper = document.getElementById("proverb-form-wrapper");
+
+  toggleProverbButton?.addEventListener("click", () => {
+    const visible = proverbWrapper.style.display === "block";
+    proverbWrapper.style.display = visible ? "none" : "block";
+    toggleProverbButton.textContent = visible ? "📜 Add a Proverb" : "🛑 Cancel";
+  });
+
+  // ✅ Show success message if redirected from proverb submission
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("saved") === "proverb") {
+    alert("✅ Proverb saved successfully!");
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 5000);
+  }
+</script>
+
+
+  <style>
+    .dashboard {
+      max-width: 600px;
+      margin: 5rem auto;
+      padding: 2rem;
+      background-color: #2e2a38;
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .dashboard h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background-color: #6c5ce7;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: darkslategray;
+      transform: translateY(-2px);
+    }
+  </style>
+</Layout>

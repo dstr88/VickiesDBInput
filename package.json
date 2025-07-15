@@ -1,0 +1,31 @@
+{
+  "name": "vickiesthoughts-astro-y",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.11.0",
+    "dompurify": "^3.2.6",
+    "dotenv": "^17.2.0",
+    "he": "^1.2.0",
+    "jsdom": "^26.1.0",
+    "lorem-ipsum": "^2.0.8",
+    "marked": "^16.0.0",
+    "mysql2": "^3.14.2",
+    "sanitize-html": "^2.17.0",
+    "slugify": "^1.6.6",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/he": "^1.2.3",
+    "@types/jsdom": "^21.1.7",
+    "@types/sanitize-html": "^2.16.0",
+    "ts-node": "^10.9.2"
+  }
+}

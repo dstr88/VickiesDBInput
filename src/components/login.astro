@@ -1,0 +1,88 @@
+
+<div class="login-card">
+  <form class="login-form" method="POST" action="/api/login">
+  <input type="text" name="username" placeholder="Username" required />
+  <input type="password" name="password" placeholder="Password" required />
+
+  <!-- ✅ Add Remember Me checkbox -->
+  <label class="remember-label">
+    <input type="checkbox" name="remember" />
+    Remember Me
+  </label>
+
+  <button class="btn" type="submit" name="action" value="login">Login</button>
+</form>
+
+</div>
+    
+
+
+
+
+ <style>
+    .login-card {
+      background: hsl(0, 37%, 24%);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 450px;
+      color: white;
+    }
+
+    
+
+    .login-form input {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      width: 400px;
+    }
+
+    .btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #6c5ce7, #8e44ad);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, #fff8c6 0%, transparent 80%);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0.4;
+  transition: transform 0.6s ease;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.btn:hover::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.5);
+  background: linear-gradient(135deg, #7d65e8, #a64af3);
+  color: #fff;
+}
+
+      
+ </style>

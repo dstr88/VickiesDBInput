@@ -1,0 +1,47 @@
+
+
+<!-- Full-width ribbon-like navbar at top -->
+<nav class="dashboard-navbar">
+  <button id="toggle-post" class="btn">✍️ Write a Post</button>
+ <a href="/Proverbs"><button id="toggle-proverb" class="btn">📜 Proverbs</button></a>
+
+</nav>
+
+
+
+<style>
+  .dashboard-navbar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    background-color: #1e1a28;
+    border-bottom: 2px solid #444;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .dashboard-navbar .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: #6c5ce7;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+
+  .dashboard-navbar .btn:hover {
+    background-color: darkslategray;
+  }
+
+
+  .form-wrapper {
+    margin-top: 2rem;
+  }
+</style>

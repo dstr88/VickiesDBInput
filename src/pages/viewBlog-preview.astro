@@ -1,0 +1,89 @@
+---
+// ✅ viewblog-preview.astro
+import Layout from "../layouts/Layout.astro";
+import type { BlogPost } from '../types/BlogPost';
+import { decodeHtmlEntities, sanitizeHtml } from "../lib/htmlutils";
+import { ArticleData } from "../lib/ArticleData";
+
+function getExcerpt(htmlContent: string, maxLength: number = 160): string {
+  const textOnly = htmlContent.replace(/<[^>]*>/g, '');
+  return textOnly.length > maxLength
+    ? textOnly.slice(0, maxLength).trim() + "..."
+    : textOnly;
+}
+
+type PostWithExcerpt = BlogPost & {
+  excerpt: string;
+};
+
+let posts: PostWithExcerpt[] = [];
+
+try {
+  let rawPosts: BlogPost[] = [];
+
+  if (!import.meta.env.SSR) {
+    const articleData = new ArticleData();
+    rawPosts = await articleData.getAllPosts(); // ✅ includes private posts
+  }
+
+  posts = rawPosts.map((post) => {
+    const sanitized = sanitizeHtml(decodeHtmlEntities(post.content));
+    return {
+      ...post,
+      content: sanitized,
+      excerpt: getExcerpt(sanitized),
+      createdAt: post.createdAt ?? new Date().toISOString(),
+    };
+  });
+
+  posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+} catch (error) {
+  console.error("❌ Error loading blog preview posts:", error);
+}
+---
+<Layout>
+  <div class="pg">
+    <h1 class="preview-banner">🔒 Internal Blog Preview (Private + Public)</h1>
+    {posts.length > 0 ? (
+      <section class="VickiesList" aria-labelledby="blog-title">
+        <div class="blogtitles">
+          <h1 id="blog-title" class="blog-heading title">All Blog Posts</h1>
+          <ul class="list" id="blogPosts">
+            {posts.map((post) => (
+              <li class={post.isPrivate ? "private" : ""}>
+                <a href={`/blog/${post.slug}`} class="post-link">
+                  {post.title}
+                </a>
+                <p class="excerpt">{post.excerpt}</p>
+                <p class="meta">
+                  Posted on {new Date(post.createdAt).toLocaleDateString()}
+                  {post.isPrivate && " — PRIVATE"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ) : (
+      <p>No blog posts available</p>
+    )}
+  </div>
+
+  <style>
+    .preview-banner {
+      text-align: center;
+      font-size: 1.4rem;
+      background: #440000;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin: 2rem auto 0 auto;
+      max-width: 800px;
+    }
+
+    .private {
+      border-left: 5px solid red;
+      background-color: #3a2b2b !important;
+    }
+  </style>
+</Layout>

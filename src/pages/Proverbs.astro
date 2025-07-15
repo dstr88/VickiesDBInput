@@ -1,0 +1,321 @@
+---
+import type { Proverb } from '../types/Proverbs';
+import { ProverbData } from '../lib/ProverbData';
+import Layout from "../layouts/Layout.astro";
+import Clock from '@/components/clock.astro';
+const proverbData = new ProverbData();
+const allProverbs: Proverb[] = await proverbData.getAllProverbs();
+const displayCount = 20;
+const initialProverbs = allProverbs.slice(0, displayCount);
+const serializedProverbs = JSON.stringify(allProverbs).replace(/</g, '\u003c');
+---
+<Layout>
+    <Clock />
+    <div class="wrapper">
+<script type="application/json" id="serialized-proverbs">{serializedProverbs}</script>
+
+<section class="proverb-manager">
+  <div class="top-buttons">
+    <button id="open-modal" class="add-proverb-btn">➕ Add Proverb</button>
+    <a href="/dashboard" class="blog-link-btn styled-link">📄 View Blog Posts</a>
+  </div>
+
+  <input type="text" id="search-proverb" placeholder="🔍 Search proverbs..." class="search-bar" />
+
+  <h2>📜 Manage Proverbs</h2>
+
+  <table class="proverb-table">
+    <thead>
+      <tr>
+        <th>UID</th>
+        <th>Text</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody id="proverb-table-body">
+      {initialProverbs.map(p => (
+        <tr class="proverb-row" data-id={p.created_at} data-text={p.text}>
+          <td>{new Date(p.created_at).toLocaleString()}</td>
+          <td>{p.text}</td>
+          <td><button class="delete-btn">🗑️</button></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  {allProverbs.length > displayCount && (
+    <button id="load-more" class="load-more-btn">⬇️ Load More</button>
+  )}
+</section>
+
+<!-- Modal -->
+<div id="proverb-modal" class="modal hidden">
+  <div class="modal-content">
+    <textarea id="new-proverb" placeholder="Enter your proverb (max 25 words)"></textarea>
+    <button id="save-proverb">💾 Save Proverb</button>
+    <button id="close-modal">❌ Close</button>
+  </div>
+</div>
+</div>
+
+<script type="module" is:inline>
+  import DOMPurify from 'dompurify';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('proverb-modal');
+    const openBtn = document.getElementById('open-modal');
+    const closeBtn = document.getElementById('close-modal');
+    const saveBtn = document.getElementById('save-proverb');
+    const textField = document.getElementById('new-proverb');
+    const searchInput = document.getElementById('search-proverb');
+    const tableBody = document.getElementById('proverb-table-body');
+    const loadMoreBtn = document.getElementById('load-more');
+
+    openBtn?.addEventListener('click', () => {
+      modal?.classList.remove('hidden');
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      modal?.classList.add('hidden');
+      textField.value = '';
+    });
+
+    saveBtn?.addEventListener('click', async () => {
+      let text = textField.value.trim();
+      const wordCount = text.split(/\s+/).length;
+      if (!text || wordCount > 25) {
+        alert("Proverb is required and must be under 25 words.");
+        return;
+      }
+
+      text = DOMPurify.sanitize(text);
+
+      const res = await fetch('/api/proverbs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+
+      if (res.ok) {
+        alert("✅ Proverb saved!");
+        location.reload();
+      } else {
+        const msg = await res.text();
+        alert(`❌ Failed to save proverb: ${msg}`);
+      }
+    });
+
+    searchInput?.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      const rows = document.querySelectorAll('.proverb-row');
+      rows.forEach(row => {
+        const text = row.dataset.text?.toLowerCase() || '';
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const row = e.target.closest('tr');
+        const id = row?.dataset.id;
+
+        if (!id) return;
+
+        const confirmed = confirm("🗑️ Are you sure you want to delete this proverb?");
+        if (!confirmed) return;
+
+        try {
+          const res = await fetch(`/api/proverbs/${id}`, {
+            method: 'DELETE'
+          });
+
+          if (res.ok) {
+            row.remove();
+            alert("✅ Proverb deleted.");
+          } else {
+            const msg = await res.text();
+            alert(`❌ Failed to delete proverb: ${msg}`);
+          }
+        } catch (err) {
+          console.error("❌ Delete error:", err);
+          alert("❌ Network error or server issue.");
+        }
+      });
+    });
+
+    let shown = 20;
+    const allProverbs = JSON.parse(document.getElementById("serialized-proverbs")?.textContent || '[]');
+
+    loadMoreBtn?.addEventListener('click', () => {
+      const next = allProverbs.slice(shown, shown + 20);
+
+      for (const p of next) {
+        const tr = document.createElement('tr');
+        tr.className = 'proverb-row';
+        tr.dataset.id = p.created_at;
+        tr.dataset.text = p.text;
+
+        tr.innerHTML = `
+          <td>${new Date(p.created_at).toLocaleString()}</td>
+          <td>${p.text}</td>
+          <td><button class="delete-btn">🗑️</button></td>
+        `;
+
+        tr.querySelector('.delete-btn')?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const confirmed = confirm("Delete this proverb?");
+          if (!confirmed) return;
+
+          await fetch(`/api/proverbs/${p.created_at}`, {
+            method: 'DELETE'
+          });
+          tr.remove();
+        });
+
+        tableBody?.appendChild(tr);
+      }
+
+      shown += 20;
+      if (shown >= allProverbs.length) loadMoreBtn.style.display = 'none';
+    });
+  });
+</script>
+
+
+<style>
+    .wrapper{
+        background-color: darkslategray;
+    }
+  .proverb-manager {
+    margin: 4rem 3rem;
+    padding: 2rem;
+    max-width: 1200px;
+    background-color: #2e2a38;
+    border-radius: 1rem;
+    color: white;
+    font-size: 1.5rem;
+    line-height: 1.7;
+  }
+
+  .top-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .add-proverb-btn, .blog-link-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .blog-link-btn {
+    background-color: #6c5ce7;
+  }
+
+  .add-proverb-btn:hover, .blog-link-btn:hover {
+    background-color: darkgreen;
+  }
+
+  .search-bar {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #888;
+    background: #1e1a28;
+    color: white;
+  }
+
+  .proverb-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+
+  .clock{
+    margin-top: 10rem;
+  }
+
+  .proverb-table th, .proverb-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #444;
+    text-align: left;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #f66;
+    cursor: pointer;
+    font-size: 1.25rem;
+  }
+
+  .delete-btn:hover {
+    color: #ff3333;
+  }
+
+  .load-more-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .load-more-btn:hover {
+    background-color: darkslategray;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+  }
+
+  .modal.hidden {
+    display: none;
+  }
+
+  .modal-content {
+    background: #2e2a38;
+    padding: 2rem;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  #new-proverb {
+    width: 100%;
+    height: 8rem;
+    font-size: 1.25rem;
+    line-height: 1.7;
+    background-color: #1e1a28;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    resize: vertical;
+  }
+</style>
+
+
+</Layout>

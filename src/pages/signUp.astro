@@ -1,0 +1,102 @@
+---
+
+---
+
+  <section class="signup-wrapper">
+    <h1>Sign Up</h1>
+    <form id="signup-form">
+      <label for="email">Email</label>
+      <input type="email" id="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+
+      <label for="confirm-password">Confirm Password</label>
+      <input type="password" id="confirm-password" required />
+
+      <button type="submit">Create Account</button>
+
+      <p id="error-message" class="error hidden"></p>
+    </form>
+  </section>
+
+  <script type="module">
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      const error = document.getElementById('error-message');
+
+      if (!email || !password || !confirm) {
+        error.textContent = "All fields are required.";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      if (password !== confirm) {
+        error.textContent = "Passwords do not match.";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      error.classList.add("hidden");
+
+      // ✅ Placeholder: replace with real backend call later
+      alert("Account created (simulated).");
+    });
+  </script>
+
+  <style>
+    .signup-wrapper {
+      max-width: 400px;
+      margin: 5rem auto;
+      padding: 2rem;
+      background-color: #2e2a38;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      color: white;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-top: 1rem;
+    }
+
+    input {
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 2rem;
+      padding: 0.75rem;
+      background-color: #6c5ce7;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #7d65e8;
+    }
+
+    .error {
+      color: #ff8a8a;
+      margin-top: 1rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</Layout>

@@ -1,0 +1,31 @@
+---
+import { Image } from 'astro:assets';
+import WalkinPic from '../assets/SpiritWalkin.png';
+---
+<div class="matted-wrapper">
+  <h3>walk in the Spirit</h3>
+  <h4>and you will not fulfill the lusts of the flesh</h4>
+  <Image src={WalkinPic} alt="Walk in the Spirit" />
+  <p>
+    Spirit lead me where my faith is without borders,<br />
+    where I walk on the water, wherever you would call me.
+  </p>
+</div>
+
+<style>
+  .matted-wrapper {
+    max-width: 350px;         /* ✅ reduce width */
+           /* ✅ center horizontally */
+    padding: 1rem;            /* ✅ inner spacing */
+    background-color: #2b273f;  /* or your current matting color */
+    border-radius: 1rem;
+    text-align: center;
+    color: white;
+  }
+
+  p {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+</style>

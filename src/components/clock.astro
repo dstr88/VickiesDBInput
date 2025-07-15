@@ -1,0 +1,64 @@
+---
+
+const now = new Date();
+const staticDate = now.toLocaleDateString('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+const staticTime = now.toLocaleTimeString('en-US', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
+---
+
+<div class="datetime">
+  <span id="clock" class="clock-time">{staticTime}</span>
+  <span id="date" class="clock-date">{staticDate}</span>
+</div>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const clock = document.getElementById("clock");
+    const dateEl = document.getElementById("date");
+
+    if (!clock || !dateEl) return;
+
+    function updateTime() {
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      dateEl.textContent = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    updateTime(); // show immediately
+    setInterval(updateTime, 1000); // update every second
+  });
+</script>
+
+<style>
+  .datetime {
+    display: flex;
+    justify-content: center;
+    font-family: monospace;
+    font-size: xx-large;
+    color: white;
+    white-space: nowrap;
+   
+  }
+
+  .clock-time {
+    margin-right: 5ch; /* gives you about 5 character spaces */
+  }
+</style>

@@ -1,0 +1,267 @@
+---
+import type { Post } from '../types/posts.ts';
+import { ArticleData } from '../lib/ArticleData';
+
+const articleData = new ArticleData();
+const allPosts: Post[] = await articleData.getAllPosts();
+
+const displayCount = 20;
+const initialPosts = allPosts.slice(0, displayCount);
+const serializedPosts = allPosts;
+---
+
+<script type="application/json" id="serialized-posts">
+  [{"id":1,"title":"Hello","slug":"hello","content":"..."}]
+</script>
+
+
+<section class="post-manager">
+  <h2>📄 Manage Blog Posts</h2>
+
+  <table class="post-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>Preview</th>
+        <th>Private</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody id="post-table-body">
+      {initialPosts.map(post => (
+        <tr
+          class="post-row"
+          data-id={post.id}
+          data-title={post.title}
+          data-slug={post.slug}
+          data-summary={post.summary ?? ''}
+          data-content={post.content}
+          data-isprivate={post.isPrivate}
+        >
+          <td>{new Date(post.createdAt).toLocaleDateString()}</td>
+          <td class="clickable-title">{post.title}</td>
+          <td>
+            <a href={`/blog-preview/${post.slug}`} target="_blank" class="preview-btn">👁️</a>
+          </td>
+          <td>
+            <input type="checkbox" class="privacy-toggle" checked={post.isPrivate} />
+          </td>
+          <td>
+            <button class="delete-btn">🗑️</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  {allPosts.length > displayCount && (
+    <button id="load-more" class="load-more-btn">⬇️ Load More</button>
+  )}
+</section>
+
+<script type="module" is:inline>
+  window.addEventListener('DOMContentLoaded', () => {
+    let parsedPosts = [];
+
+    try {
+      const rawJson = document.getElementById("serialized-posts")?.textContent;
+      parsedPosts = rawJson ? JSON.parse(rawJson) : [];
+      console.log("✅ Loaded posts:", parsedPosts);
+    } catch (err) {
+      console.error("❌ Failed to parse serializedPosts JSON:", err);
+    }
+
+    const form = document.querySelector('form.blog-form');
+    const loadMoreBtn = document.getElementById('load-more');
+    const tableBody = document.getElementById('post-table-body');
+
+    function populateForm(post) {
+      const wrapper = document.getElementById("post-form-wrapper");
+      if (wrapper) wrapper.classList.remove("hidden");
+
+      if (form) {
+        form.querySelector('#title').value = post.title || '';
+        form.querySelector('#slug').value = post.slug || '';
+        form.querySelector('#summary').value = post.summary || '';
+        form.querySelector('#content').value = post.content || '';
+        form.querySelector('#isPrivate').checked = post.isPrivate === true || post.isPrivate === 'true';
+      }
+    }
+
+    // Edit post on row click
+    document.querySelectorAll('.post-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.privacy-toggle') || e.target.closest('.delete-btn')) return;
+
+        const post = {
+          title: row.dataset.title,
+          slug: row.dataset.slug,
+          summary: row.dataset.summary,
+          content: row.dataset.content,
+          isPrivate: row.dataset.isprivate === 'true'
+        };
+
+        populateForm(post);
+      });
+    });
+
+    // Toggle privacy
+    document.querySelectorAll('.privacy-toggle').forEach(toggle => {
+      toggle.addEventListener('change', async (e) => {
+        const row = e.target.closest('tr');
+        const id = row?.dataset.id;
+        const isPrivate = e.target.checked;
+
+        if (id) {
+          await fetch(`/api/posts/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isPrivate })
+          });
+        }
+      });
+    });
+
+    // Delete post
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const row = e.target.closest('tr');
+        const id = row?.dataset.id;
+
+        if (!id) return;
+
+        const confirmed = confirm("🗑️ Are you sure you want to delete this post?");
+        if (!confirmed) return;
+
+        try {
+          const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            row.remove();
+            alert("✅ Post deleted.");
+          } else {
+            const msg = await res.text();
+            alert(`❌ Failed to delete post: ${msg}`);
+          }
+        } catch (err) {
+          console.error("❌ Delete error:", err);
+          alert("❌ Network error or server issue.");
+        }
+      });
+    });
+
+    // Load more posts
+    let shown = 20;
+    loadMoreBtn?.addEventListener('click', () => {
+      const next = parsedPosts.slice(shown, shown + 20);
+
+      for (const post of next) {
+        const tr = document.createElement('tr');
+        tr.className = 'post-row';
+        tr.dataset.id = post.id;
+        tr.dataset.title = post.title;
+        tr.dataset.slug = post.slug;
+        tr.dataset.summary = post.summary || '';
+        tr.dataset.content = post.content;
+        tr.dataset.isprivate = String(post.isPrivate);
+
+        tr.innerHTML = `
+          <td>${new Date(post.createdAt).toLocaleDateString()}</td>
+          <td class="clickable-title">${post.title}</td>
+          <td><a href="/blog-preview/${post.slug}" target="_blank" class="preview-btn">👁️</a></td>
+          <td><input type="checkbox" class="privacy-toggle" ${post.isPrivate ? 'checked' : ''}></td>
+          <td><button class="delete-btn">🗑️</button></td>
+        `;
+
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('.privacy-toggle') || e.target.closest('.delete-btn')) return;
+          populateForm(post);
+        });
+
+        tr.querySelector('.privacy-toggle')?.addEventListener('change', async (e) => {
+          const isPrivate = e.target.checked;
+          await fetch(`/api/posts/${post.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isPrivate })
+          });
+        });
+
+        tr.querySelector('.delete-btn')?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (confirm("Delete this post?")) {
+            await fetch(`/api/posts/${post.id}`, { method: 'DELETE' });
+            tr.remove();
+          }
+        });
+
+        tableBody?.appendChild(tr);
+      }
+
+      shown += 20;
+      if (shown >= parsedPosts.length) loadMoreBtn.style.display = 'none';
+    });
+  });
+</script>
+
+<style>
+  .post-manager {
+    margin: 4rem auto;
+    padding: 2rem;
+    max-width: 1200px;
+    background-color: #2e2a38;
+    border-radius: 1rem;
+    color: white;
+  }
+
+  .post-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+
+  .post-table th, .post-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #444;
+    text-align: left;
+  }
+
+  .clickable-title {
+    color: #6c5ce7;
+    cursor: pointer;
+  }
+
+  .load-more-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .load-more-btn:hover {
+    background-color: darkslategray;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #f66;
+    cursor: pointer;
+    font-size: 1.25rem;
+  }
+
+  .delete-btn:hover {
+    color: #ff3333;
+  }
+
+  .privacy-toggle {
+    transform: scale(1.2);
+    cursor: pointer;
+  }
+</style>
